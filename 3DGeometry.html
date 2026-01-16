@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pyramid Wireframe with Height</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        #shapeMenu {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 100;
+        }
+        #shapeMenu h3 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .menu-button {
+            display: block;
+            width: 100%;
+            padding: 10px 20px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .menu-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .menu-button.active {
+            background: rgba(80, 120, 255, 0.5);
+            border-color: rgb(80, 120, 255);
+        }
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 15px 0;
+        }
+        .toggle-container {
+            margin: 10px 0;
+        }
+        .toggle-label {
+            color: white;
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: rgba(80, 120, 255, 0.5);
+            border-color: rgb(80, 120, 255);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .mode-description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            margin-top: 5px;
+        }
+        #helpButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(80, 120, 255, 0.5);
+            border: 2px solid rgb(80, 120, 255);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        #helpButton:hover {
+            background: rgba(80, 120, 255, 0.8);
+            transform: scale(1.1);
+        }
+        #debugButton {
+            position: absolute;
+            top: 20px;
+            right: 70px;
+            background: rgba(255, 165, 0, 0.5);
+            border: 2px solid rgb(255, 165, 0);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        #debugButton:hover {
+            background: rgba(255, 165, 0, 0.8);
+            transform: scale(1.1);
+        }
+        #debugButton.active {
+            background: rgba(255, 165, 0, 0.9);
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.7);
+        }
+        #clickInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: monospace;
+            z-index: 100;
+            display: none;
+            min-width: 300px;
+            text-align: center;
+        }
+        #clickInfo.show {
+            display: block;
+        }
+        #helpPanel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            max-height: 90vh;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 101;
+            color: white;
+            overflow-y: auto;
+            display: none;
+        }
+        #helpPanel.show {
+            display: block;
+        }
+        #helpPanel h2 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            color: rgb(80, 120, 255);
+        }
+        #helpPanel h3 {
+            margin: 15px 0 8px 0;
+            font-size: 16px;
+            color: rgb(100, 150, 255);
+        }
+        #helpPanel p {
+            margin: 5px 0;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        #helpPanel ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        #helpPanel li {
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 3px 0;
+        }
+        #closeHelp {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+        }
+        #closeHelp:hover {
+            color: rgb(255, 100, 100);
+        }
+    </style>
+</head>
+<body>
+<button id="debugButton" title="Toggle Click Debug">🖱️</button>
+<button id="helpButton">?</button>
+
+<div id="clickInfo"></div>
+
+<div id="helpPanel">
+    <button id="closeHelp">×</button>
+    <h2>3D Shape Editor - Usage Guide</h2>
+    
+    <h3>🎨 Shapes</h3>
+    <p>Select from Pyramid, Tri Pyramid, Cube, Cone, or Prism. Each shape has orange handles at vertices.</p>
+    
+    <h3>🔧 Resize Type (Toggle)</h3>
+    <ul>
+        <li><strong>ON (Proportional):</strong> Drag any handle to scale all vertices proportionally along X, Y, or Z axis</li>
+        <li><strong>OFF (Free Movement):</strong> Move each vertex independently in any direction</li>
+    </ul>
+    
+    <h3>✏️ Edit/Resize Mode (Toggle)</h3>
+    <ul>
+        <li><strong>OFF (Resize Mode):</strong> Drag handles to move/resize the shape</li>
+        <li><strong>ON (Edit Mode):</strong> Draw custom cyan lines and add custom handles</li>
+    </ul>
+    
+    <h3>📝 Edit Mode Actions</h3>
+    <ul>
+        <li><strong>Drag between handles:</strong> Draw a cyan line connecting two vertices</li>
+        <li><strong>Right-click on edge/line:</strong> Add a custom handle (within 3 pixels of line)</li>
+        <li><strong>Click custom handle:</strong> Delete it (custom handles only)</li>
+        <li><strong>Custom handles:</strong> Stay on their edge during proportional resize</li>
+    </ul>
+    
+    <h3>🎯 Special Handles</h3>
+    <ul>
+        <li><strong>Orange spheres:</strong> Shape vertices and custom points</li>
+        <li><strong>Red line:</strong> Height/center line with handle at base center</li>
+        <li><strong>White lines:</strong> Shape edges</li>
+        <li><strong>Cyan lines:</strong> Custom user-drawn connections</li>
+    </ul>
+    
+    <h3>🖱️ Camera Controls</h3>
+    <ul>
+        <li><strong>Left drag (empty space):</strong> Rotate view</li>
+        <li><strong>Mouse wheel:</strong> Zoom in/out</li>
+        <li><strong>Right drag (empty space):</strong> Pan camera</li>
+    </ul>
+    
+    <h3>💡 Tips</h3>
+    <ul>
+        <li>Use Edit Mode to build complex wireframe structures</li>
+        <li>Custom handles on lines let you subdivide edges</li>
+        <li>Shape vertices cannot be deleted, only custom ones</li>
+        <li>Proportional resize maintains shape proportions</li>
+    </ul>
+</div>
+
+<div id="shapeMenu">
+    <h3>Shape</h3>
+    <button class="menu-button active" id="pyramidBtn">Pyramid</button>
+    <button class="menu-button" id="triPyramidBtn">Tri Pyramid</button>
+    <button class="menu-button" id="cubeBtn">Cube</button>
+    <button class="menu-button" id="coneBtn">Cone</button>
+    <button class="menu-button" id="cylinderBtn">Cylinder</button>
+    <button class="menu-button" id="prismBtn">Prism</button>
+    
+    <div class="menu-divider"></div>
+    
+    <div class="toggle-container" id="resizeTypeContainer" style="opacity: 0.5;">
+        <span class="toggle-label">Resize Type</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="proportionalToggle" checked disabled>
+            <span class="slider"></span>
+        </label>
+        <div class="mode-description" id="modeDescription">Proportional Resize</div>
+    </div>
+    
+    <div class="menu-divider"></div>
+    
+    <div class="toggle-container">
+        <span class="toggle-label">Edit/Resize</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="editModeToggle" checked>
+            <span class="slider"></span>
+        </label>
+        <div class="mode-description" id="editModeDescription">Edit Mode</div>
+    </div>
+</div>
+<canvas id="renderCanvas"></canvas>
+
+<!-- Babylon.js CDN -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script>
+    const canvas = document.getElementById("renderCanvas");
+    const engine = new BABYLON.Engine(canvas, true);
+
+    let currentShape = 'pyramid';
+    let proportionalMode = true;
+    let editMode = true;
+
+    const createScene = () => {
+        const scene = new BABYLON.Scene(engine);
+
+        // Camera
+        const camera = new BABYLON.ArcRotateCamera(
+            "camera",
+            BABYLON.Tools.ToRadians(45),
+            BABYLON.Tools.ToRadians(45),
+            10,
+            new BABYLON.Vector3(0, 1, 0), 
+            scene
+        );
+        camera.attachControl(canvas, true);
+
+        // Light
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+
+        // Vertex positions for different shapes
+        const halfSize = 3 / (2 * Math.sqrt(2));
+        let vertices = {};
+
+        const initPyramid = () => {
+            vertices = {
+                apex: new BABYLON.Vector3(0, 4, 0),
+                base: [
+                    new BABYLON.Vector3(halfSize, 0, halfSize),
+                    new BABYLON.Vector3(-halfSize, 0, halfSize),
+                    new BABYLON.Vector3(-halfSize, 0, -halfSize),
+                    new BABYLON.Vector3(halfSize, 0, -halfSize)
+                ]
+            };
+        };
+
+        const initCube = () => {
+            const s = 1.5;
+            vertices = {
+                top: [
+                    new BABYLON.Vector3(s, s, s),
+                    new BABYLON.Vector3(-s, s, s),
+                    new BABYLON.Vector3(-s, s, -s),
+                    new BABYLON.Vector3(s, s, -s)
+                ],
+                bottom: [
+                    new BABYLON.Vector3(s, -s, s),
+                    new BABYLON.Vector3(-s, -s, s),
+                    new BABYLON.Vector3(-s, -s, -s),
+                    new BABYLON.Vector3(s, -s, -s)
+                ]
+            };
+        };
+
+        const initCone = () => {
+            const radius = 1.5;
+            const segments = 16;
+            vertices = {
+                apex: new BABYLON.Vector3(0, 3, 0),
+                base: []
+            };
+            for (let i = 0; i < segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                vertices.base.push(new BABYLON.Vector3(
+                    Math.cos(angle) * radius,
+                    -1,
+                    Math.sin(angle) * radius
+                ));
+            }
+        };
+
+        const initPrism = () => {
+            const radius = 1.5;
+            const height = 2;
+            vertices = {
+                top: [
+                    new BABYLON.Vector3(radius, height, 0),
+                    new BABYLON.Vector3(-radius * 0.5, height, radius * 0.866),
+                    new BABYLON.Vector3(-radius * 0.5, height, -radius * 0.866)
+                ],
+                bottom: [
+                    new BABYLON.Vector3(radius, -height, 0),
+                    new BABYLON.Vector3(-radius * 0.5, -height, radius * 0.866),
+                    new BABYLON.Vector3(-radius * 0.5, -height, -radius * 0.866)
+                ]
+            };
+        };
+
+        const initTriPyramid = () => {
+            const radius = 1.5;
+            const height = 3;
+            vertices = {
+                apex: new BABYLON.Vector3(0, height, 0),
+                base: [
+                    new BABYLON.Vector3(radius, 0, 0),
+                    new BABYLON.Vector3(-radius * 0.5, 0, radius * 0.866),
+                    new BABYLON.Vector3(-radius * 0.5, 0, -radius * 0.866)
+                ]
+            };
+        };
+
+        const initCylinder = () => {
+            const radius = 1.5;
+            const segments = 16;
+            const height = 2;
+            vertices = {
+                top: [],
+                bottom: []
+            };
+            for (let i = 0; i < segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                vertices.top.push(new BABYLON.Vector3(
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                ));
+                vertices.bottom.push(new BABYLON.Vector3(
+                    Math.cos(angle) * radius,
+                    -height,
+                    Math.sin(angle) * radius
+                ));
+            }
+        };
+
+        // Initialize with pyramid
+        initPyramid();
+
+        // Create custom mesh
+        let mesh = null;
+        let heightLine = null;
+        let edgeLines = [];
+        let customLines = []; // Store custom user-drawn lines
+        let customLineObjects = []; // Store the actual line meshes
+        let customVertices = []; // Store independent vertices with edge information
+        // Each custom vertex: { position: Vector3, edgeStart: vertexRef, edgeEnd: vertexRef, t: number }
+        let centerPosition = new BABYLON.Vector3(0, 0, 0); // Center point at end of height line (for pyramid/cone)
+        let topCenterPosition = new BABYLON.Vector3(0, 0, 0); // Top center for cube/prism
+        let bottomCenterPosition = new BABYLON.Vector3(0, 0, 0); // Bottom center for cube/prism
+
+        // Update custom vertex positions based on their edge references
+        const updateCustomVertexPositions = () => {
+            customVertices.forEach(cv => {
+                if (cv.edgeStart && cv.edgeEnd) {
+                    const startPos = getVertexPosition(cv.edgeStart);
+                    const endPos = getVertexPosition(cv.edgeEnd);
+                    if (startPos && endPos) {
+                        cv.position.copyFrom(startPos.scale(1 - cv.t).add(endPos.scale(cv.t)));
+                    }
+                }
+            });
+        };
+
+        const createCustomMesh = () => {
+            // Dispose old meshes
+            if (mesh) mesh.dispose();
+            if (heightLine) heightLine.dispose();
+            edgeLines.forEach(line => line.dispose());
+            edgeLines = [];
+
+            const positions = [];
+            const indices = [];
+
+            if (currentShape === 'pyramid') {
+                // Add apex vertex
+                positions.push(vertices.apex.x, vertices.apex.y, vertices.apex.z);
+                // Add base vertices
+                vertices.base.forEach(v => positions.push(v.x, v.y, v.z));
+                // Faces
+                indices.push(0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1);
+                indices.push(1, 3, 2, 1, 4, 3);
+            } else if (currentShape === 'triPyramid') {
+                // Triangular pyramid (tetrahedron)
+                positions.push(vertices.apex.x, vertices.apex.y, vertices.apex.z);
+                vertices.base.forEach(v => positions.push(v.x, v.y, v.z));
+                // 4 triangular faces
+                indices.push(0, 1, 2); // apex to base edge 1-2
+                indices.push(0, 2, 3); // apex to base edge 2-3
+                indices.push(0, 3, 1); // apex to base edge 3-1
+                indices.push(1, 3, 2); // base triangle
+            } else if (currentShape === 'cube') {
+                // Add all vertices
+                vertices.top.forEach(v => positions.push(v.x, v.y, v.z));
+                vertices.bottom.forEach(v => positions.push(v.x, v.y, v.z));
+                // Faces (top, bottom, sides)
+                indices.push(0, 2, 1, 0, 3, 2); // top
+                indices.push(4, 5, 6, 4, 6, 7); // bottom
+                indices.push(0, 1, 5, 0, 5, 4); // front
+                indices.push(2, 3, 7, 2, 7, 6); // back
+                indices.push(1, 2, 6, 1, 6, 5); // left
+                indices.push(3, 0, 4, 3, 4, 7); // right
+            } else if (currentShape === 'cone') {
+                // Add apex
+                positions.push(vertices.apex.x, vertices.apex.y, vertices.apex.z);
+                // Add base vertices
+                vertices.base.forEach(v => positions.push(v.x, v.y, v.z));
+                // Side faces
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    indices.push(0, i + 1, nextI + 1);
+                }
+                // Base faces
+                for (let i = 1; i < vertices.base.length - 1; i++) {
+                    indices.push(1, i + 2, i + 1);
+                }
+            } else if (currentShape === 'prism') {
+                // Add all vertices (triangular prism)
+                vertices.top.forEach(v => positions.push(v.x, v.y, v.z));
+                vertices.bottom.forEach(v => positions.push(v.x, v.y, v.z));
+                // Faces
+                indices.push(0, 2, 1); // top triangle
+                indices.push(3, 4, 5); // bottom triangle
+                // Side faces (rectangles as two triangles each)
+                indices.push(0, 1, 4, 0, 4, 3); // side 1
+                indices.push(1, 2, 5, 1, 5, 4); // side 2
+                indices.push(2, 0, 3, 2, 3, 5); // side 3
+            } else if (currentShape === 'cylinder') {
+                // Add all vertices
+                vertices.top.forEach(v => positions.push(v.x, v.y, v.z));
+                vertices.bottom.forEach(v => positions.push(v.x, v.y, v.z));
+                
+                const numSegments = vertices.top.length;
+                
+                // Top circle faces
+                for (let i = 1; i < numSegments - 1; i++) {
+                    indices.push(0, i + 1, i);
+                }
+                
+                // Bottom circle faces
+                for (let i = 1; i < numSegments - 1; i++) {
+                    indices.push(numSegments, numSegments + i, numSegments + i + 1);
+                }
+                
+                // Side faces (rectangles as two triangles each)
+                for (let i = 0; i < numSegments; i++) {
+                    const nextI = (i + 1) % numSegments;
+                    indices.push(i, nextI, numSegments + nextI);
+                    indices.push(i, numSegments + nextI, numSegments + i);
+                }
+            }
+
+            // Create mesh
+            mesh = new BABYLON.Mesh("customMesh", scene);
+            const vertexData = new BABYLON.VertexData();
+            vertexData.positions = positions;
+            vertexData.indices = indices;
+            
+            const normals = [];
+            BABYLON.VertexData.ComputeNormals(positions, indices, normals);
+            vertexData.normals = normals;
+            
+            vertexData.applyToMesh(mesh);
+
+            // Apply transparent material
+            const material = new BABYLON.StandardMaterial("meshMat", scene);
+            material.alpha = 0.3;
+            material.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.8);
+            material.backFaceCulling = false;
+            mesh.material = material;
+
+            // Create edge lines
+            const edgeColor = new BABYLON.Color3(1, 1, 1);
+            
+            if (currentShape === 'pyramid') {
+                vertices.base.forEach((baseCorner, i) => {
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_apex_${i}`, {
+                        points: [vertices.apex, baseCorner]
+        }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                });
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_base_${i}`, {
+                        points: [vertices.base[i], vertices.base[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+            } else if (currentShape === 'triPyramid') {
+                // Edges from apex to base vertices
+                vertices.base.forEach((baseCorner, i) => {
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_apex_${i}`, {
+                        points: [vertices.apex, baseCorner]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                });
+                // Base triangle edges
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_base_${i}`, {
+                        points: [vertices.base[i], vertices.base[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+            } else if (currentShape === 'cube') {
+                // Top edges
+                for (let i = 0; i < 4; i++) {
+                    const nextI = (i + 1) % 4;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_top_${i}`, {
+                        points: [vertices.top[i], vertices.top[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                // Bottom edges
+                for (let i = 0; i < 4; i++) {
+                    const nextI = (i + 1) % 4;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_bottom_${i}`, {
+                        points: [vertices.bottom[i], vertices.bottom[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                // Vertical edges
+                for (let i = 0; i < 4; i++) {
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_vert_${i}`, {
+                        points: [vertices.top[i], vertices.bottom[i]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+            } else if (currentShape === 'cone') {
+                // Show edges from apex to the 4 base handles
+                const totalVerts = vertices.base.length;
+                for (let i = 0; i < 4; i++) {
+                    const index = Math.floor(i * totalVerts / 4);
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_apex_${i}`, {
+                        points: [vertices.apex, vertices.base[index]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                // Base circle edge
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_base_${i}`, {
+                        points: [vertices.base[i], vertices.base[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+            } else if (currentShape === 'prism') {
+                // Top triangle edges
+                for (let i = 0; i < 3; i++) {
+                    const nextI = (i + 1) % 3;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_top_${i}`, {
+                        points: [vertices.top[i], vertices.top[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                // Bottom triangle edges
+                for (let i = 0; i < 3; i++) {
+                    const nextI = (i + 1) % 3;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_bottom_${i}`, {
+                        points: [vertices.bottom[i], vertices.bottom[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                // Vertical edges
+                for (let i = 0; i < 3; i++) {
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_vert_${i}`, {
+                        points: [vertices.top[i], vertices.bottom[i]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+            } else if (currentShape === 'cylinder') {
+                const totalVerts = vertices.top.length;
+                const handleIndices = [];
+                for (let i = 0; i < 4; i++) {
+                    handleIndices.push(Math.floor(i * totalVerts / 4));
+                }
+                
+                // Top circle edge
+                for (let i = 0; i < vertices.top.length; i++) {
+                    const nextI = (i + 1) % vertices.top.length;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_top_${i}`, {
+                        points: [vertices.top[i], vertices.top[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                
+                // Bottom circle edge
+                for (let i = 0; i < vertices.bottom.length; i++) {
+                    const nextI = (i + 1) % vertices.bottom.length;
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_bottom_${i}`, {
+                        points: [vertices.bottom[i], vertices.bottom[nextI]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+                
+                // Vertical edges - only at handle positions
+                for (let i = 0; i < handleIndices.length; i++) {
+                    const index = handleIndices[i];
+                    const line = BABYLON.MeshBuilder.CreateLines(`edge_vert_${i}`, {
+                        points: [vertices.top[index], vertices.bottom[index]]
+                    }, scene);
+                    line.color = edgeColor;
+                    edgeLines.push(line);
+                }
+            }
+
+            // Height line
+            if (currentShape === 'pyramid' || currentShape === 'cone' || currentShape === 'triPyramid') {
+        const baseCenter = new BABYLON.Vector3(0, 0, 0);
+                vertices.base.forEach(v => baseCenter.addInPlace(v));
+                baseCenter.scaleInPlace(1 / vertices.base.length);
+                centerPosition.copyFrom(baseCenter);
+                heightLine = BABYLON.MeshBuilder.CreateLines("heightLine", {
+                    points: [vertices.apex, baseCenter]
+        }, scene);
+                heightLine.color = new BABYLON.Color3(1, 0, 0);
+            } else if (currentShape === 'cube' || currentShape === 'prism' || currentShape === 'cylinder') {
+                const topCenter = new BABYLON.Vector3(0, 0, 0);
+                vertices.top.forEach(v => topCenter.addInPlace(v));
+                topCenter.scaleInPlace(1 / vertices.top.length);
+                const bottomCenter = new BABYLON.Vector3(0, 0, 0);
+                vertices.bottom.forEach(v => bottomCenter.addInPlace(v));
+                bottomCenter.scaleInPlace(1 / vertices.bottom.length);
+                topCenterPosition.copyFrom(topCenter);
+                bottomCenterPosition.copyFrom(bottomCenter);
+                heightLine = BABYLON.MeshBuilder.CreateLines("heightLine", {
+                    points: [topCenter, bottomCenter]
+                }, scene);
+                heightLine.color = new BABYLON.Color3(1, 0, 0);
+            }
+
+            // Render custom user-drawn lines
+            customLineObjects.forEach(line => line.dispose());
+            customLineObjects = [];
+            
+            customLines.forEach((customLine, index) => {
+                const startPos = getVertexPosition(customLine.start);
+                const endPos = getVertexPosition(customLine.end);
+                
+                if (startPos && endPos) {
+                    const line = BABYLON.MeshBuilder.CreateLines(`customLine_${index}`, {
+                        points: [startPos, endPos]
+        }, scene);
+                    line.color = new BABYLON.Color3(0, 1, 1); // Cyan for custom lines
+                    customLineObjects.push(line);
+                }
+            });
+        };
+
+        // Helper function to get vertex position by reference
+        const getVertexPosition = (vertexRef) => {
+            if (vertexRef.type === 'apex') {
+                return vertices.apex;
+            } else if (vertexRef.type === 'center') {
+                return centerPosition;
+            } else if (vertexRef.type === 'topCenter') {
+                return topCenterPosition;
+            } else if (vertexRef.type === 'bottomCenter') {
+                return bottomCenterPosition;
+            } else if (vertexRef.type === 'top' || vertexRef.type === 'base' || vertexRef.type === 'bottom') {
+                const array = vertexRef.type === 'top' ? vertices.top : 
+                             vertexRef.type === 'base' ? vertices.base : vertices.bottom;
+                return array ? array[vertexRef.index] : null;
+            } else if (vertexRef.type === 'custom') {
+                return customVertices[vertexRef.index] ? customVertices[vertexRef.index].position : null;
+            }
+            return null;
+        };
+
+        // Helper function to create vertex reference from a position
+        const createVertexRef = (pos) => {
+            // Check if it's the apex
+            if (vertices.apex && vertices.apex.equals(pos)) {
+                return { type: 'apex', index: 0 };
+            }
+            // Check top vertices
+            if (vertices.top) {
+                const topIndex = vertices.top.findIndex(v => v.equals(pos));
+                if (topIndex !== -1) {
+                    return { type: 'top', index: topIndex };
+                }
+            }
+            // Check base vertices
+            if (vertices.base) {
+                const baseIndex = vertices.base.findIndex(v => v.equals(pos));
+                if (baseIndex !== -1) {
+                    return { type: 'base', index: baseIndex };
+                }
+            }
+            // Check bottom vertices
+            if (vertices.bottom) {
+                const bottomIndex = vertices.bottom.findIndex(v => v.equals(pos));
+                if (bottomIndex !== -1) {
+                    return { type: 'bottom', index: bottomIndex };
+                }
+            }
+            return null;
+        };
+
+        createCustomMesh();
+
+        // Create simple sphere handles for each vertex
+        let handles = [];
+
+        const createHandles = () => {
+            // Dispose old handles
+            handles.forEach(h => h.dispose());
+            handles = [];
+
+            const createHandle = (position, vertexType, vertexIndex) => {
+                const sphere = BABYLON.MeshBuilder.CreateSphere(`handle_${vertexType}_${vertexIndex}`, 
+                    { diameter: 0.15 }, scene);
+                sphere.position = position.clone();
+                
+                const sphereMat = new BABYLON.StandardMaterial(`handleMat_${vertexType}_${vertexIndex}`, scene);
+                sphereMat.diffuseColor = new BABYLON.Color3(1, 0.5, 0);
+                sphereMat.emissiveColor = new BABYLON.Color3(0.3, 0.15, 0);
+                sphere.material = sphereMat;
+                
+                sphere.userData = {
+                    vertexType: vertexType,
+                    vertexIndex: vertexIndex
+                };
+                
+                handles.push(sphere);
+                return sphere;
+            };
+
+            if (currentShape === 'pyramid') {
+                createHandle(vertices.apex, 'apex', 0);
+                vertices.base.forEach((baseVertex, i) => {
+                    createHandle(baseVertex, 'base', i);
+                });
+                // Add center handle
+                createHandle(centerPosition, 'center', 0);
+            } else if (currentShape === 'triPyramid') {
+                createHandle(vertices.apex, 'apex', 0);
+                vertices.base.forEach((baseVertex, i) => {
+                    createHandle(baseVertex, 'base', i);
+                });
+                // Add center handle
+                createHandle(centerPosition, 'center', 0);
+            } else if (currentShape === 'cube') {
+                vertices.top.forEach((topVertex, i) => {
+                    createHandle(topVertex, 'top', i);
+                });
+                vertices.bottom.forEach((bottomVertex, i) => {
+                    createHandle(bottomVertex, 'bottom', i);
+                });
+                // Add center handles at both ends of height line
+                createHandle(topCenterPosition, 'topCenter', 0);
+                createHandle(bottomCenterPosition, 'bottomCenter', 0);
+            } else if (currentShape === 'cone') {
+                createHandle(vertices.apex, 'apex', 0);
+                // Only create 4 handles evenly spaced around the circle
+                const totalVerts = vertices.base.length;
+                for (let i = 0; i < 4; i++) {
+                    const index = Math.floor(i * totalVerts / 4);
+                    createHandle(vertices.base[index], 'base', index);
+                }
+                // Add center handle
+                createHandle(centerPosition, 'center', 0);
+            } else if (currentShape === 'prism') {
+                vertices.top.forEach((topVertex, i) => {
+                    createHandle(topVertex, 'top', i);
+                });
+                vertices.bottom.forEach((bottomVertex, i) => {
+                    createHandle(bottomVertex, 'bottom', i);
+                });
+                // Add center handles at both ends of height line
+                createHandle(topCenterPosition, 'topCenter', 0);
+                createHandle(bottomCenterPosition, 'bottomCenter', 0);
+            } else if (currentShape === 'cylinder') {
+                // Only create 4 handles evenly spaced around each circle
+                const totalVerts = vertices.top.length;
+                for (let i = 0; i < 4; i++) {
+                    const index = Math.floor(i * totalVerts / 4);
+                    createHandle(vertices.top[index], 'top', index);
+                    createHandle(vertices.bottom[index], 'bottom', index);
+                }
+                // Add center handles at both ends of height line
+                createHandle(topCenterPosition, 'topCenter', 0);
+                createHandle(bottomCenterPosition, 'bottomCenter', 0);
+            }
+            
+            // Add handles for custom vertices
+            customVertices.forEach((cv, i) => {
+                createHandle(cv.position, 'custom', i);
+            });
+        };
+
+        createHandles();
+
+        // Update handle positions
+        const updateHandlePositions = () => {
+            // First update custom vertex positions based on their edges
+            updateCustomVertexPositions();
+            
+            handles.forEach(handle => {
+                let pos;
+                if (handle.userData.vertexType === 'custom') {
+                    pos = customVertices[handle.userData.vertexIndex] ? customVertices[handle.userData.vertexIndex].position : null;
+                } else if (handle.userData.vertexType === 'center') {
+                    pos = centerPosition;
+                } else if (handle.userData.vertexType === 'topCenter') {
+                    pos = topCenterPosition;
+                } else if (handle.userData.vertexType === 'bottomCenter') {
+                    pos = bottomCenterPosition;
+                } else if (currentShape === 'pyramid' || currentShape === 'cone' || currentShape === 'triPyramid') {
+                    pos = handle.userData.vertexType === 'apex' 
+                        ? vertices.apex 
+                        : vertices.base[handle.userData.vertexIndex];
+                } else if (currentShape === 'cube' || currentShape === 'prism' || currentShape === 'cylinder') {
+                    pos = handle.userData.vertexType === 'top'
+                        ? vertices.top[handle.userData.vertexIndex]
+                        : vertices.bottom[handle.userData.vertexIndex];
+                }
+                if (pos) {
+                    handle.position.copyFrom(pos);
+                }
+            });
+        };
+
+        // Helper function to update circle vertices when a handle is moved
+        const updateCircleFromHandle = (circleVertices, movedIndex, newPos) => {
+            // Calculate the center of the circle (average Y position)
+            const centerY = circleVertices[movedIndex].y;
+            
+            // Calculate new radius from the moved handle
+            const dx = newPos.x - 0; // Assuming circle center at x=0
+            const dz = newPos.z - 0; // Assuming circle center at z=0
+            const newRadius = Math.sqrt(dx * dx + dz * dz);
+            
+            // Get the angle of the moved handle
+            const movedAngle = Math.atan2(newPos.z, newPos.x);
+            
+            // Determine which of the 4 handles this is (0, 1, 2, or 3)
+            const totalVerts = circleVertices.length;
+            const handleNumber = Math.round(movedIndex / (totalVerts / 4));
+            const expectedAngle = (handleNumber * Math.PI / 2);
+            
+            // Calculate angle offset (rotation of the circle)
+            const angleOffset = movedAngle - expectedAngle;
+            
+            // Recalculate all vertices in the circle
+            for (let i = 0; i < totalVerts; i++) {
+                const angle = (i / totalVerts) * Math.PI * 2 + angleOffset;
+                circleVertices[i].x = Math.cos(angle) * newRadius;
+                circleVertices[i].y = newPos.y; // Use new Y position
+                circleVertices[i].z = Math.sin(angle) * newRadius;
+            }
+        };
+
+        // Drag behavior
+        let draggedHandle = null;
+        let startingPoint = null;
+        let currentMeshPos = null;
+        let initialVerticesState = null;
+        
+        // Edit mode variables
+        let editModeStartHandle = null;
+        let tempLine = null;
+        let editModeStartPos = null; // Track if user is dragging or just clicking
+
+        // Helper function to find closest edge to mouse position
+        const findClosestEdge = (mouseX, mouseY) => {
+            const threshold = 3; // pixels
+            let closestEdge = null;
+            let minDistance = threshold;
+
+            // Get all edges to check
+            const edgesToCheck = [];
+            
+            // Add shape edges
+            if (currentShape === 'pyramid') {
+                vertices.base.forEach((baseCorner, i) => {
+                    edgesToCheck.push({ start: vertices.apex, end: baseCorner, type: 'shape' });
+                });
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    edgesToCheck.push({ start: vertices.base[i], end: vertices.base[nextI], type: 'shape' });
+                }
+            } else if (currentShape === 'triPyramid') {
+                vertices.base.forEach((baseCorner, i) => {
+                    edgesToCheck.push({ start: vertices.apex, end: baseCorner, type: 'shape' });
+                });
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    edgesToCheck.push({ start: vertices.base[i], end: vertices.base[nextI], type: 'shape' });
+                }
+            } else if (currentShape === 'cube' || currentShape === 'prism') {
+                const numVerts = currentShape === 'cube' ? 4 : 3;
+                // Top edges
+                for (let i = 0; i < numVerts; i++) {
+                    const nextI = (i + 1) % numVerts;
+                    edgesToCheck.push({ start: vertices.top[i], end: vertices.top[nextI], type: 'shape' });
+                }
+                // Bottom edges
+                for (let i = 0; i < numVerts; i++) {
+                    const nextI = (i + 1) % numVerts;
+                    edgesToCheck.push({ start: vertices.bottom[i], end: vertices.bottom[nextI], type: 'shape' });
+                }
+                // Vertical edges
+                for (let i = 0; i < numVerts; i++) {
+                    edgesToCheck.push({ start: vertices.top[i], end: vertices.bottom[i], type: 'shape' });
+                }
+            } else if (currentShape === 'cylinder') {
+                const totalVerts = vertices.top.length;
+                const handleIndices = [];
+                for (let i = 0; i < 4; i++) {
+                    handleIndices.push(Math.floor(i * totalVerts / 4));
+                }
+                
+                // Top circle edges
+                for (let i = 0; i < vertices.top.length; i++) {
+                    const nextI = (i + 1) % vertices.top.length;
+                    edgesToCheck.push({ start: vertices.top[i], end: vertices.top[nextI], type: 'shape' });
+                }
+                
+                // Bottom circle edges
+                for (let i = 0; i < vertices.bottom.length; i++) {
+                    const nextI = (i + 1) % vertices.bottom.length;
+                    edgesToCheck.push({ start: vertices.bottom[i], end: vertices.bottom[nextI], type: 'shape' });
+                }
+                
+                // Vertical edges - only at handle positions
+                for (let i = 0; i < handleIndices.length; i++) {
+                    const index = handleIndices[i];
+                    edgesToCheck.push({ start: vertices.top[index], end: vertices.bottom[index], type: 'shape' });
+                }
+            } else if (currentShape === 'cone') {
+                // Check edges from apex to the 4 base handles
+                const totalVerts = vertices.base.length;
+                for (let i = 0; i < 4; i++) {
+                    const index = Math.floor(i * totalVerts / 4);
+                    edgesToCheck.push({ start: vertices.apex, end: vertices.base[index], type: 'shape' });
+                }
+                // Base circle edges
+                for (let i = 0; i < vertices.base.length; i++) {
+                    const nextI = (i + 1) % vertices.base.length;
+                    edgesToCheck.push({ start: vertices.base[i], end: vertices.base[nextI], type: 'shape' });
+                }
+            }
+
+            // Add custom lines (cyan lines drawn by user)
+            customLines.forEach((customLine, index) => {
+                const startPos = getVertexPosition(customLine.start);
+                const endPos = getVertexPosition(customLine.end);
+                if (startPos && endPos) {
+                    edgesToCheck.push({ 
+                        start: startPos, 
+                        end: endPos, 
+                        type: 'custom',
+                        lineRef: customLine // Store reference to the custom line
+                    });
+                }
+            });
+
+            // Check each edge
+            edgesToCheck.forEach(edge => {
+                const startScreen = BABYLON.Vector3.Project(
+                    edge.start,
+                    BABYLON.Matrix.Identity(),
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
+                const endScreen = BABYLON.Vector3.Project(
+                    edge.end,
+                    BABYLON.Matrix.Identity(),
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+                );
+
+                // Calculate distance from point to line segment
+                const lineVec = { x: endScreen.x - startScreen.x, y: endScreen.y - startScreen.y };
+                const pointVec = { x: mouseX - startScreen.x, y: mouseY - startScreen.y };
+                const lineLen = Math.sqrt(lineVec.x * lineVec.x + lineVec.y * lineVec.y);
+                
+                if (lineLen > 0) {
+                    const t = Math.max(0, Math.min(1, (pointVec.x * lineVec.x + pointVec.y * lineVec.y) / (lineLen * lineLen)));
+                    const projX = startScreen.x + t * lineVec.x;
+                    const projY = startScreen.y + t * lineVec.y;
+                    const dist = Math.sqrt((mouseX - projX) * (mouseX - projX) + (mouseY - projY) * (mouseY - projY));
+                    
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestEdge = { 
+                            start: edge.start, 
+                            end: edge.end, 
+                            t: t, 
+                            type: edge.type,
+                            lineRef: edge.lineRef 
+                        };
+                    }
+                }
+            });
+
+            return closestEdge;
+        };
+
+        // Right click handler for adding vertices
+        const onRightClick = (evt) => {
+            if (!editMode) return;
+            
+            evt.preventDefault();
+            
+            const edge = findClosestEdge(scene.pointerX, scene.pointerY);
+            if (edge) {
+                // Get the 3D ray from the pointer position
+                const ray = scene.createPickingRay(scene.pointerX, scene.pointerY, BABYLON.Matrix.Identity(), camera);
+                
+                // Create a plane that contains the edge and is perpendicular to the camera view
+                const edgeDirection = edge.end.subtract(edge.start).normalize();
+                const cameraToEdge = edge.start.subtract(camera.position).normalize();
+                const planeNormal = BABYLON.Vector3.Cross(edgeDirection, cameraToEdge).normalize();
+                
+                // Create plane passing through the edge start point
+                const plane = BABYLON.Plane.FromPositionAndNormal(edge.start, planeNormal);
+                
+                // Find where the ray intersects this plane
+                const distance = ray.intersectsPlane(plane);
+                
+                let newPos;
+                let t_value;
+                
+                if (distance !== null) {
+                    // Get the 3D point where ray hits the plane
+                    const hitPoint = ray.direction.scale(distance).add(ray.origin);
+                    
+                    // Project this point onto the edge line to find the closest point on the edge
+                    const edgeVector = edge.end.subtract(edge.start);
+                    const edgeLength = edgeVector.length();
+                    const edgeNormalized = edgeVector.normalize();
+                    
+                    const pointVector = hitPoint.subtract(edge.start);
+                    const projectionLength = BABYLON.Vector3.Dot(pointVector, edgeNormalized);
+                    
+                    // Clamp to the edge bounds
+                    const clampedLength = Math.max(0, Math.min(edgeLength, projectionLength));
+                    t_value = clampedLength / edgeLength;
+                    
+                    // Calculate the actual position on the edge
+                    newPos = edge.start.add(edgeNormalized.scale(clampedLength));
+                } else {
+                    // Fallback to screen-space calculation if plane intersection fails
+                    newPos = edge.start.scale(1 - edge.t).add(edge.end.scale(edge.t));
+                    t_value = edge.t;
+                }
+                
+                let edgeStartRef, edgeEndRef;
+                
+                if (edge.type === 'custom' && edge.lineRef) {
+                    // Adding handle on a custom line - use the line's vertex references
+                    edgeStartRef = edge.lineRef.start;
+                    edgeEndRef = edge.lineRef.end;
+                } else {
+                    // Adding handle on a shape edge - create vertex references
+                    edgeStartRef = createVertexRef(edge.start);
+                    edgeEndRef = createVertexRef(edge.end);
+                }
+                
+                // Add new vertex as custom vertex with edge information
+                customVertices.push({
+                    position: newPos.clone(),
+                    edgeStart: edgeStartRef,
+                    edgeEnd: edgeEndRef,
+                    t: t_value
+                });
+                
+                // Recreate handles to include the new custom vertex
+                createHandles();
+            }
+        };
+
+        // Add context menu listener
+        canvas.addEventListener('contextmenu', onRightClick);
+
+        const onPointerDown = (evt) => {
+            if (evt.button !== 0) return;
+
+            if (debugMode) {
+                showClickInfo(evt.button);
+            }
+
+            const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => {
+                return handles.includes(mesh);
+            });
+
+            if (pickInfo.hit) {
+                draggedHandle = pickInfo.pickedMesh;
+                
+                if (editMode) {
+                    // Edit mode: Start drawing a line or prepare to delete
+                    editModeStartHandle = draggedHandle;
+                    editModeStartPos = { x: scene.pointerX, y: scene.pointerY };
+                    camera.detachControl(canvas);
+                } else {
+                    // Normal mode: Move vertices
+                    camera.detachControl(canvas);
+
+                    // Store initial state for proportional scaling
+                    if (proportionalMode) {
+                        initialVerticesState = {
+                            apex: vertices.apex ? vertices.apex.clone() : null,
+                            base: vertices.base ? vertices.base.map(v => v.clone()) : null,
+                            top: vertices.top ? vertices.top.map(v => v.clone()) : null,
+                            bottom: vertices.bottom ? vertices.bottom.map(v => v.clone()) : null
+                        };
+                    }
+
+                    const plane = BABYLON.Plane.FromPositionAndNormal(
+                        draggedHandle.position.clone(),
+                        camera.position.subtract(draggedHandle.position).normalize()
+                    );
+                    
+                    const ray = scene.createPickingRay(scene.pointerX, scene.pointerY, BABYLON.Matrix.Identity(), camera);
+                    const distance = ray.intersectsPlane(plane);
+                    
+                    if (distance !== null) {
+                        startingPoint = ray.direction.scale(distance).add(ray.origin);
+                        currentMeshPos = draggedHandle.position.clone();
+                    }
+                }
+            }
+        };
+
+        const onPointerUp = () => {
+            if (editMode && editModeStartHandle) {
+                // Check if mouse moved (dragging) or just clicked
+                const dx = scene.pointerX - editModeStartPos.x;
+                const dy = scene.pointerY - editModeStartPos.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 5) {
+                    // Just clicked without dragging - delete the handle
+                    const handleToDelete = editModeStartHandle;
+                    
+                    // Only allow deletion of custom vertices
+                    if (handleToDelete.userData.vertexType === 'custom') {
+                        const indexToDelete = handleToDelete.userData.vertexIndex;
+                        
+                        // Remove the custom vertex
+                        customVertices.splice(indexToDelete, 1);
+                        
+                        // Remove any custom lines connected to this vertex
+                        customLines = customLines.filter(line => {
+                            return !(line.start.type === 'custom' && line.start.index === indexToDelete) &&
+                                   !(line.end.type === 'custom' && line.end.index === indexToDelete);
+                        });
+                        
+                        // Update indices in remaining custom lines
+                        customLines.forEach(line => {
+                            if (line.start.type === 'custom' && line.start.index > indexToDelete) {
+                                line.start.index--;
+                            }
+                            if (line.end.type === 'custom' && line.end.index > indexToDelete) {
+                                line.end.index--;
+                            }
+                        });
+                        
+                        // Update indices in remaining custom vertices' edge references
+                        customVertices.forEach(cv => {
+                            if (cv.edgeStart && cv.edgeStart.type === 'custom' && cv.edgeStart.index > indexToDelete) {
+                                cv.edgeStart.index--;
+                            }
+                            if (cv.edgeEnd && cv.edgeEnd.type === 'custom' && cv.edgeEnd.index > indexToDelete) {
+                                cv.edgeEnd.index--;
+                            }
+                        });
+                        
+                        // Recreate mesh and handles
+                        createCustomMesh();
+                        createHandles();
+                    }
+                } else {
+                    // Dragged - check if we ended on a different handle (draw line)
+                    const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => {
+                        return handles.includes(mesh);
+                    });
+
+                    if (pickInfo.hit && pickInfo.pickedMesh !== editModeStartHandle) {
+                        // Save the line connection
+                        const startRef = {
+                            type: editModeStartHandle.userData.vertexType,
+                            index: editModeStartHandle.userData.vertexIndex
+                        };
+                        const endRef = {
+                            type: pickInfo.pickedMesh.userData.vertexType,
+                            index: pickInfo.pickedMesh.userData.vertexIndex
+                        };
+                        
+                        // Check if this line already exists
+                        const lineExists = customLines.some(line => 
+                            (line.start.type === startRef.type && line.start.index === startRef.index &&
+                             line.end.type === endRef.type && line.end.index === endRef.index) ||
+                            (line.start.type === endRef.type && line.start.index === endRef.index &&
+                             line.end.type === startRef.type && line.end.index === startRef.index)
+                        );
+                        
+                        if (!lineExists) {
+                            customLines.push({ start: startRef, end: endRef });
+                            createCustomMesh();
+                        }
+                    }
+                }
+
+                // Clean up temp line
+                if (tempLine) {
+                    tempLine.dispose();
+                    tempLine = null;
+                }
+                
+                editModeStartHandle = null;
+                editModeStartPos = null;
+                camera.attachControl(canvas, true);
+            } else if (startingPoint) {
+                camera.attachControl(canvas, true);
+                startingPoint = null;
+                draggedHandle = null;
+                initialVerticesState = null;
+            }
+        };
+
+        const onPointerMove = () => {
+            if (editMode && editModeStartHandle) {
+                // Draw temporary line while dragging
+                if (tempLine) {
+                    tempLine.dispose();
+                }
+                
+                // Get current mouse position in 3D
+                const ray = scene.createPickingRay(scene.pointerX, scene.pointerY, BABYLON.Matrix.Identity(), camera);
+                const plane = BABYLON.Plane.FromPositionAndNormal(
+                    editModeStartHandle.position.clone(),
+                    camera.position.subtract(editModeStartHandle.position).normalize()
+                );
+                const distance = ray.intersectsPlane(plane);
+                
+                if (distance !== null) {
+                    const currentPoint = ray.direction.scale(distance).add(ray.origin);
+                    tempLine = BABYLON.MeshBuilder.CreateLines("tempLine", {
+                        points: [editModeStartHandle.position, currentPoint]
+        }, scene);
+                    tempLine.color = new BABYLON.Color3(0.5, 1, 1); // Light cyan
+                }
+                return;
+            }
+            
+            if (!startingPoint || !draggedHandle) return;
+
+            const plane = BABYLON.Plane.FromPositionAndNormal(
+                currentMeshPos,
+                camera.position.subtract(currentMeshPos).normalize()
+            );
+            
+            const ray = scene.createPickingRay(scene.pointerX, scene.pointerY, BABYLON.Matrix.Identity(), camera);
+            const distance = ray.intersectsPlane(plane);
+            
+            if (distance !== null) {
+                const currentPoint = ray.direction.scale(distance).add(ray.origin);
+                const diff = currentPoint.subtract(startingPoint);
+                const newPos = currentMeshPos.add(diff);
+
+                if (proportionalMode) {
+                    // Proportional resize mode - scale along each axis independently
+                    if (!initialVerticesState) return;
+
+                    // Calculate the movement delta from original position
+                    const delta = newPos.subtract(currentMeshPos);
+                    
+                    // Determine which axis has the most movement
+                    const absDelta = new BABYLON.Vector3(Math.abs(delta.x), Math.abs(delta.y), Math.abs(delta.z));
+                    let dominantAxis;
+                    if (absDelta.x >= absDelta.y && absDelta.x >= absDelta.z) {
+                        dominantAxis = 'x';
+                    } else if (absDelta.y >= absDelta.x && absDelta.y >= absDelta.z) {
+                        dominantAxis = 'y';
+                    } else {
+                        dominantAxis = 'z';
+                    }
+
+                    // Calculate scale factor based on dominant axis
+                    const originalAxisValue = dominantAxis === 'x' ? currentMeshPos.x : 
+                                             dominantAxis === 'y' ? currentMeshPos.y : currentMeshPos.z;
+                    const newAxisValue = dominantAxis === 'x' ? newPos.x : 
+                                        dominantAxis === 'y' ? newPos.y : newPos.z;
+                    
+                    let scaleFactor = 1.0;
+                    if (Math.abs(originalAxisValue) > 0.001) {
+                        scaleFactor = newAxisValue / originalAxisValue;
+                    } else {
+                        scaleFactor = 1.0 + (newAxisValue - originalAxisValue);
+                    }
+
+                    // Apply proportional scaling to all vertices on the selected axis
+                    if (currentShape === 'pyramid' || currentShape === 'cone' || currentShape === 'triPyramid') {
+                        if (initialVerticesState.apex) {
+                            if (dominantAxis === 'x') vertices.apex.x = initialVerticesState.apex.x * scaleFactor;
+                            else if (dominantAxis === 'y') vertices.apex.y = initialVerticesState.apex.y * scaleFactor;
+                            else vertices.apex.z = initialVerticesState.apex.z * scaleFactor;
+                        }
+                        if (initialVerticesState.base) {
+                            vertices.base.forEach((v, i) => {
+                                if (dominantAxis === 'x') v.x = initialVerticesState.base[i].x * scaleFactor;
+                                else if (dominantAxis === 'y') v.y = initialVerticesState.base[i].y * scaleFactor;
+                                else v.z = initialVerticesState.base[i].z * scaleFactor;
+                            });
+                        }
+                    } else if (currentShape === 'cube' || currentShape === 'prism' || currentShape === 'cylinder') {
+                        if (initialVerticesState.top) {
+                            vertices.top.forEach((v, i) => {
+                                if (dominantAxis === 'x') v.x = initialVerticesState.top[i].x * scaleFactor;
+                                else if (dominantAxis === 'y') v.y = initialVerticesState.top[i].y * scaleFactor;
+                                else v.z = initialVerticesState.top[i].z * scaleFactor;
+                            });
+                        }
+                        if (initialVerticesState.bottom) {
+                            vertices.bottom.forEach((v, i) => {
+                                if (dominantAxis === 'x') v.x = initialVerticesState.bottom[i].x * scaleFactor;
+                                else if (dominantAxis === 'y') v.y = initialVerticesState.bottom[i].y * scaleFactor;
+                                else v.z = initialVerticesState.bottom[i].z * scaleFactor;
+                            });
+                        }
+                    }
+                } else {
+                    // Free movement mode - move individual vertex
+                    if (draggedHandle.userData.vertexType === 'custom') {
+                        // Move custom vertex and clear edge constraint (free movement)
+                        const cv = customVertices[draggedHandle.userData.vertexIndex];
+                        cv.position.copyFrom(newPos);
+                        // Clear edge references to allow free movement
+                        cv.edgeStart = null;
+                        cv.edgeEnd = null;
+                    } else if (currentShape === 'cone') {
+                        if (draggedHandle.userData.vertexType === 'apex') {
+                            vertices.apex.copyFrom(newPos);
+                        } else {
+                            // Update entire circle when moving a handle
+                            updateCircleFromHandle(vertices.base, draggedHandle.userData.vertexIndex, newPos);
+                        }
+                    } else if (currentShape === 'cylinder') {
+                        if (draggedHandle.userData.vertexType === 'top') {
+                            updateCircleFromHandle(vertices.top, draggedHandle.userData.vertexIndex, newPos);
+                        } else if (draggedHandle.userData.vertexType === 'bottom') {
+                            updateCircleFromHandle(vertices.bottom, draggedHandle.userData.vertexIndex, newPos);
+                        }
+                    } else if (currentShape === 'pyramid' || currentShape === 'triPyramid') {
+                        if (draggedHandle.userData.vertexType === 'apex') {
+                            vertices.apex.copyFrom(newPos);
+                        } else {
+                            vertices.base[draggedHandle.userData.vertexIndex].copyFrom(newPos);
+                        }
+                    } else if (currentShape === 'cube' || currentShape === 'prism') {
+                        if (draggedHandle.userData.vertexType === 'top') {
+                            vertices.top[draggedHandle.userData.vertexIndex].copyFrom(newPos);
+                        } else {
+                            vertices.bottom[draggedHandle.userData.vertexIndex].copyFrom(newPos);
+                        }
+                    }
+                }
+
+                // Update mesh and handles
+                createCustomMesh();
+                updateHandlePositions();
+            }
+        };
+
+        scene.onPointerObservable.add((pointerInfo) => {
+            switch (pointerInfo.type) {
+                case BABYLON.PointerEventTypes.POINTERDOWN:
+                    onPointerDown(pointerInfo.event);
+                    break;
+                case BABYLON.PointerEventTypes.POINTERUP:
+                    onPointerUp();
+                    break;
+                case BABYLON.PointerEventTypes.POINTERMOVE:
+                    onPointerMove();
+                    break;
+            }
+        });
+
+        // Shape switching
+        window.switchShape = (shape) => {
+            currentShape = shape;
+            
+            // Clear custom vertices and lines when switching shapes
+            customVertices = [];
+            customLines = [];
+            
+            // Initialize vertices for new shape
+            if (shape === 'pyramid') {
+                initPyramid();
+            } else if (shape === 'triPyramid') {
+                initTriPyramid();
+            } else if (shape === 'cube') {
+                initCube();
+            } else if (shape === 'cone') {
+                initCone();
+            } else if (shape === 'prism') {
+                initPrism();
+            } else if (shape === 'cylinder') {
+                initCylinder();
+            }
+
+            // Recreate everything
+            createCustomMesh();
+            createHandles();
+
+            // Update button states
+            document.querySelectorAll('.menu-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(shape + 'Btn').classList.add('active');
+        };
+
+        return scene;
+    };
+
+    const scene = createScene();
+
+    engine.runRenderLoop(() => {
+        scene.render();
+    });
+
+    window.addEventListener("resize", () => {
+        engine.resize();
+    });
+
+    // Debug mode: capture all mouse events
+    canvas.addEventListener('mousedown', (e) => {
+        if (debugMode) {
+            showClickInfo(e.button);
+        }
+    });
+    
+    canvas.addEventListener('contextmenu', (e) => {
+        if (debugMode) {
+            showClickInfo(2);
+        }
+    });
+
+    // Menu button event listeners
+    document.getElementById('pyramidBtn').addEventListener('click', () => switchShape('pyramid'));
+    document.getElementById('triPyramidBtn').addEventListener('click', () => switchShape('triPyramid'));
+    document.getElementById('cubeBtn').addEventListener('click', () => switchShape('cube'));
+    document.getElementById('coneBtn').addEventListener('click', () => switchShape('cone'));
+    document.getElementById('cylinderBtn').addEventListener('click', () => switchShape('cylinder'));
+    document.getElementById('prismBtn').addEventListener('click', () => switchShape('prism'));
+
+    // Proportional mode toggle
+    const proportionalToggle = document.getElementById('proportionalToggle');
+    const modeDescription = document.getElementById('modeDescription');
+    
+    proportionalToggle.addEventListener('change', (e) => {
+        proportionalMode = e.target.checked;
+        modeDescription.textContent = proportionalMode ? 'Proportional Resize' : 'Free Movement';
+    });
+
+    // Edit mode toggle
+    const editModeToggle = document.getElementById('editModeToggle');
+    const editModeDescription = document.getElementById('editModeDescription');
+    
+    editModeToggle.addEventListener('change', (e) => {
+        editMode = e.target.checked;
+        
+        if (editMode) {
+            // Edit mode is ON - disable resize type toggle
+            editModeDescription.textContent = 'Edit Mode';
+            proportionalToggle.disabled = true;
+            proportionalToggle.parentElement.parentElement.style.opacity = '0.5';
+        } else {
+            // Resize mode - enable resize type toggle
+            editModeDescription.textContent = 'Resize Mode';
+            proportionalToggle.disabled = false;
+            proportionalToggle.parentElement.parentElement.style.opacity = '1';
+        }
+    });
+
+    // Help panel toggle
+    const helpButton = document.getElementById('helpButton');
+    const helpPanel = document.getElementById('helpPanel');
+    const closeHelp = document.getElementById('closeHelp');
+    const debugButton = document.getElementById('debugButton');
+    const clickInfo = document.getElementById('clickInfo');
+    
+    let debugMode = false;
+    let clickInfoTimeout;
+    
+    helpButton.addEventListener('click', () => {
+        helpPanel.classList.toggle('show');
+    });
+    
+    closeHelp.addEventListener('click', () => {
+        helpPanel.classList.remove('show');
+    });
+    
+    debugButton.addEventListener('click', () => {
+        debugMode = !debugMode;
+        debugButton.classList.toggle('active');
+        if (!debugMode) {
+            clickInfo.classList.remove('show');
+        }
+    });
+    
+    // Function to show click information
+    const showClickInfo = (button) => {
+        if (!debugMode) return;
+        
+        let clickName = '';
+        if (button === 0) clickName = 'Left Click';
+        else if (button === 1) clickName = 'Middle Click';
+        else if (button === 2) clickName = 'Right Click';
+        
+        clickInfo.textContent = clickName;
+        clickInfo.classList.add('show');
+        
+        // Clear previous timeout
+        if (clickInfoTimeout) {
+            clearTimeout(clickInfoTimeout);
+        }
+        
+        // Hide after 3 seconds
+        clickInfoTimeout = setTimeout(() => {
+            clickInfo.classList.remove('show');
+        }, 3000);
+    };
+    
+    // Close help panel when clicking outside
+    document.addEventListener('click', (e) => {
+        if (helpPanel.classList.contains('show') && 
+            !helpPanel.contains(e.target) && 
+            e.target !== helpButton) {
+            helpPanel.classList.remove('show');
+        }
+    });
+</script>
+</body>
+</html>
