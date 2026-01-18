@@ -1670,6 +1670,15 @@
         
         clickInfo.textContent = clickName;
         
+        // Color right-click same as handles (orange)
+        if (button === 2) {
+            clickInfo.style.background = 'rgba(255, 127, 0, 0.9)';
+            clickInfo.style.borderColor = 'rgb(255, 127, 0)';
+        } else {
+            clickInfo.style.background = 'rgba(0, 0, 0, 0.85)';
+            clickInfo.style.borderColor = 'rgba(255, 165, 0, 0.5)';
+        }
+        
         // Position near the click location with offset to avoid covering the click point
         const offset = 20; // pixels away from cursor
         let left = x + offset;
