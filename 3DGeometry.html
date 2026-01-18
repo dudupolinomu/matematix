@@ -157,22 +157,41 @@
         }
         #clickInfo {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 8px;
             font-size: 16px;
             font-family: monospace;
             z-index: 100;
             display: none;
-            min-width: 300px;
             text-align: center;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 165, 0, 0.5);
         }
         #clickInfo.show {
             display: block;
+            animation: fadeInOut 2s ease-out;
+        }
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            10% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
         }
         #helpPanel {
             position: absolute;
@@ -1219,7 +1238,7 @@
             if (evt.button !== 0) return;
 
             if (debugMode) {
-                showClickInfo(evt.button);
+                showClickInfo(evt.button, evt.clientX, evt.clientY);
             }
 
             const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => {
@@ -1567,13 +1586,13 @@
     // Debug mode: capture all mouse events
     canvas.addEventListener('mousedown', (e) => {
         if (debugMode) {
-            showClickInfo(e.button);
+            showClickInfo(e.button, e.clientX, e.clientY);
         }
     });
     
     canvas.addEventListener('contextmenu', (e) => {
         if (debugMode) {
-            showClickInfo(2);
+            showClickInfo(2, e.clientX, e.clientY);
         }
     });
 
@@ -1641,7 +1660,7 @@
     });
     
     // Function to show click information
-    const showClickInfo = (button) => {
+    const showClickInfo = (button, x, y) => {
         if (!debugMode) return;
         
         let clickName = '';
@@ -1650,6 +1669,34 @@
         else if (button === 2) clickName = 'Right Click';
         
         clickInfo.textContent = clickName;
+        
+        // Position near the click location with offset to avoid covering the click point
+        const offset = 20; // pixels away from cursor
+        let left = x + offset;
+        let top = y + offset;
+        
+        // Keep within viewport bounds
+        const infoWidth = 150; // approximate width
+        const infoHeight = 50; // approximate height
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Adjust if too far right
+        if (left + infoWidth > viewportWidth) {
+            left = x - infoWidth - offset;
+        }
+        
+        // Adjust if too far down
+        if (top + infoHeight > viewportHeight) {
+            top = y - infoHeight - offset;
+        }
+        
+        // Ensure not negative
+        left = Math.max(offset, left);
+        top = Math.max(offset, top);
+        
+        clickInfo.style.left = left + 'px';
+        clickInfo.style.top = top + 'px';
         clickInfo.classList.add('show');
         
         // Clear previous timeout
@@ -1657,10 +1704,10 @@
             clearTimeout(clickInfoTimeout);
         }
         
-        // Hide after 3 seconds
+        // Hide after animation (2 seconds)
         clickInfoTimeout = setTimeout(() => {
             clickInfo.classList.remove('show');
-        }, 3000);
+        }, 2000);
     };
     
     // Close help panel when clicking outside
