@@ -1824,6 +1824,11 @@
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const shapeMenu = document.getElementById('shapeMenu');
     
+    if (!isTouchDevice) {
+        shapeMenu.classList.add('show');
+        hamburgerBtn.classList.add('open');
+    }
+    
     hamburgerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         shapeMenu.classList.toggle('show');
