@@ -17,6 +17,8 @@
 <!-- General Meta -->
 <meta name="description" content="Free interactive 3D geometry tool for students. Build, manipulate, and understand spatial concepts through hands-on learning.">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Explore 3D Geometry</title>
     <style>
         html, body {
@@ -25,15 +27,67 @@
             margin: 0;
             overflow: hidden;
             font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         #renderCanvas {
             width: 100%;
             height: 100%;
             touch-action: none;
+            -ms-touch-action: none;
+        }
+        #hamburgerBtn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            min-height: 48px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 101;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #hamburgerBtn:hover {
+            background: rgba(0, 0, 0, 0.85);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        #hamburgerBtn .hamburger-icon {
+            width: 24px;
+            height: 18px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #hamburgerBtn .hamburger-icon span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background: white;
+            border-radius: 2px;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        #hamburgerBtn.open .hamburger-icon span:nth-child(1) {
+            transform: translateY(7.5px) rotate(45deg);
+        }
+        #hamburgerBtn.open .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+        #hamburgerBtn.open .hamburger-icon span:nth-child(3) {
+            transform: translateY(-7.5px) rotate(-45deg);
         }
         #shapeMenu {
             position: absolute;
-            top: 20px;
+            top: 76px;
             left: 20px;
             background: rgba(0, 0, 0, 0.7);
             padding: 15px;
@@ -41,6 +95,15 @@
             z-index: 100;
             min-width: 180px;
             width: 180px;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: visibility 0.25s, opacity 0.25s, transform 0.25s;
+        }
+        #shapeMenu.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
         }
         #shapeMenu h3 {
             color: white;
@@ -50,15 +113,18 @@
         .menu-button {
             display: block;
             width: 100%;
-            padding: 10px 20px;
-            margin: 5px 0;
+            min-height: 44px;
+            padding: 12px 20px;
+            margin: 6px 0;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 14px;
             transition: all 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .menu-button:hover {
             background: rgba(255, 255, 255, 0.2);
@@ -77,6 +143,10 @@
             margin: 10px 0;
             width: 100%;
             box-sizing: border-box;
+            min-height: 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .toggle-label {
             color: white;
@@ -87,8 +157,9 @@
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 24px;
+            width: 52px;
+            height: 28px;
+            touch-action: manipulation;
         }
         .toggle-switch input {
             opacity: 0;
@@ -133,13 +204,14 @@
         .icon-toggle-button {
             display: flex;
             width: 100%;
-            padding: 12px 20px;
-            margin: 5px 0;
+            min-height: 44px;
+            padding: 14px 20px;
+            margin: 6px 0;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 16px;
             transition: all 0.3s;
             text-align: center;
@@ -147,6 +219,8 @@
             justify-content: center;
             gap: 10px;
             box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .icon-toggle-button:hover {
             background: rgba(255, 255, 255, 0.2);
@@ -170,14 +244,18 @@
             background: rgba(80, 120, 255, 0.5);
             border: 2px solid rgb(80, 120, 255);
             color: white;
-            width: 40px;
-            height: 40px;
+            min-width: 48px;
+            min-height: 48px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             z-index: 100;
             transition: all 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         #helpButton:hover {
             background: rgba(80, 120, 255, 0.8);
@@ -186,12 +264,14 @@
         #debugButton {
             position: absolute;
             top: 20px;
-            right: 70px;
+            right: 76px;
             background: rgba(255, 165, 0, 0.5);
             border: 2px solid rgb(255, 165, 0);
             color: white;
-            width: 40px;
-            height: 40px;
+            min-width: 48px;
+            min-height: 48px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 18px;
@@ -199,6 +279,8 @@
             z-index: 100;
             transition: all 0.3s;
             display: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         #debugButton.visible {
             display: block;
@@ -297,14 +379,49 @@
             background: transparent;
             border: none;
             color: white;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            width: 30px;
-            height: 30px;
+            min-width: 44px;
+            min-height: 44px;
+            width: 44px;
+            height: 44px;
             padding: 0;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         #closeHelp:hover {
             color: rgb(255, 100, 100);
+        }
+        /* Touch-friendly: larger targets on touch devices */
+        @media (pointer: coarse) {
+            #shapeMenu {
+                padding: 18px;
+                min-width: 200px;
+                width: 200px;
+            }
+            .menu-button {
+                min-height: 48px;
+                padding: 14px 20px;
+                margin: 8px 0;
+                font-size: 15px;
+            }
+            .icon-toggle-button {
+                min-height: 48px;
+                padding: 16px 20px;
+            }
+            .icon-toggle-button .icon {
+                font-size: 22px;
+            }
+            .toggle-label {
+                font-size: 14px;
+            }
+            #helpPanel {
+                width: min(380px, 92vw);
+                padding: 24px;
+            }
+            #helpPanel h2 { font-size: 22px; }
+            #helpPanel h3 { font-size: 17px; }
+            #helpPanel p, #helpPanel li { font-size: 14px; }
         }
     </style>
 </head>
@@ -380,6 +497,13 @@
     </ul>
 </div>
 
+<button id="hamburgerBtn" type="button" aria-label="Toggle menu" title="Menu">
+    <span class="hamburger-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+    </span>
+</button>
 <div id="shapeMenu">
     <h3>Shape</h3>
     <button class="menu-button active" id="pyramidBtn">Pyramid</button>
@@ -415,6 +539,8 @@
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, true);
 
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
     let currentShape = 'pyramid';
     let proportionalMode = true;
     let editMode = true;
@@ -432,6 +558,21 @@
             scene
         );
         camera.attachControl(canvas, true);
+
+        // Progressive zoom: change radius by a factor so zoom-in steps decrease as you get closer
+        const zoomFactor = 1.2;
+        const minRadius = 1;
+        const maxRadius = 120;
+        camera.inputs.removeByType("ArcRotateCameraMouseWheelInput");
+        canvas.addEventListener("wheel", (evt) => {
+            evt.preventDefault();
+            const r = camera.radius;
+            if (evt.deltaY > 0) {
+                camera.radius = Math.min(r * zoomFactor, maxRadius);
+            } else {
+                camera.radius = Math.max(r / zoomFactor, minRadius);
+            }
+        }, { passive: false });
 
         // Light
         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
@@ -921,15 +1062,19 @@
 
         // Create simple sphere handles for each vertex
         let handles = [];
+        let hitAreaMeshes = []; // Invisible larger spheres for easier picking only
 
         const createHandles = () => {
-            // Dispose old handles
+            // Dispose old handles and hit areas
             handles.forEach(h => h.dispose());
             handles = [];
+            hitAreaMeshes.forEach(h => h.dispose());
+            hitAreaMeshes = [];
 
             const createHandle = (position, vertexType, vertexIndex) => {
+                const handleSize = isTouchDevice ? 0.24 : 0.15;
                 const sphere = BABYLON.MeshBuilder.CreateSphere(`handle_${vertexType}_${vertexIndex}`, 
-                    { diameter: 0.15 }, scene);
+                    { diameter: handleSize }, scene);
                 sphere.position = position.clone();
                 
                 const sphereMat = new BABYLON.StandardMaterial(`handleMat_${vertexType}_${vertexIndex}`, scene);
@@ -943,6 +1088,21 @@
                 };
                 
                 handles.push(sphere);
+
+                // Invisible larger sphere for hit area only (no visual change); desktop 1.5x visible
+                const hitDiameter = isTouchDevice ? 0.5 : (handleSize * 1.5);
+                const hitArea = BABYLON.MeshBuilder.CreateSphere(`hit_${vertexType}_${vertexIndex}`, 
+                    { diameter: hitDiameter }, scene);
+                hitArea.position = position.clone();
+                hitArea.setEnabled(true);
+                const hitMat = new BABYLON.StandardMaterial(`hitMat_${vertexType}_${vertexIndex}`, scene);
+                hitMat.alpha = 0;
+                hitMat.backFaceCulling = false;
+                hitArea.material = hitMat;
+                hitArea.isPickable = true;
+                hitArea.userData = { linkedHandle: sphere };
+                hitAreaMeshes.push(hitArea);
+
                 return sphere;
             };
 
@@ -1039,6 +1199,16 @@
                     handle.position.copyFrom(pos);
                 }
             });
+            hitAreaMeshes.forEach(hm => {
+                const handle = hm.userData.linkedHandle;
+                if (handle) hm.position.copyFrom(handle.position);
+            });
+        };
+
+        // Resolve picked mesh to logical handle (visible one) when hit area was picked
+        const getLogicalHandle = (mesh) => {
+            if (mesh && hitAreaMeshes.includes(mesh)) return mesh.userData.linkedHandle;
+            return mesh;
         };
 
         // Helper function to update circle vertices when a handle is moved
@@ -1081,10 +1251,11 @@
         let editModeStartHandle = null;
         let tempLine = null;
         let editModeStartPos = null; // Track if user is dragging or just clicking
+        let editModeEmptyTapStart = null; // Mobile: tap on empty space (edge) to add handle
 
         // Helper function to find closest edge to mouse position
         const findClosestEdge = (mouseX, mouseY) => {
-            const threshold = 3; // pixels
+            const threshold = isTouchDevice ? 14 : 3; // larger hit area on touch
             let closestEdge = null;
             let minDistance = threshold;
 
@@ -1218,78 +1389,55 @@
             return closestEdge;
         };
 
+        // Add a handle on an edge at the point closest to (pointerX, pointerY). Used by right-click and mobile tap.
+        const addVertexOnEdge = (edge, pointerX, pointerY) => {
+            const ray = scene.createPickingRay(pointerX, pointerY, BABYLON.Matrix.Identity(), camera);
+            const edgeDirection = edge.end.subtract(edge.start).normalize();
+            const cameraToEdge = edge.start.subtract(camera.position).normalize();
+            const planeNormal = BABYLON.Vector3.Cross(edgeDirection, cameraToEdge).normalize();
+            const plane = BABYLON.Plane.FromPositionAndNormal(edge.start, planeNormal);
+            const distance = ray.intersectsPlane(plane);
+
+            let newPos, t_value;
+            if (distance !== null) {
+                const hitPoint = ray.direction.scale(distance).add(ray.origin);
+                const edgeVector = edge.end.subtract(edge.start);
+                const edgeLength = edgeVector.length();
+                const edgeNormalized = edgeVector.normalize();
+                const pointVector = hitPoint.subtract(edge.start);
+                const projectionLength = BABYLON.Vector3.Dot(pointVector, edgeNormalized);
+                const clampedLength = Math.max(0, Math.min(edgeLength, projectionLength));
+                t_value = clampedLength / edgeLength;
+                newPos = edge.start.add(edgeNormalized.scale(clampedLength));
+            } else {
+                newPos = edge.start.scale(1 - edge.t).add(edge.end.scale(edge.t));
+                t_value = edge.t;
+            }
+
+            let edgeStartRef, edgeEndRef;
+            if (edge.type === 'custom' && edge.lineRef) {
+                edgeStartRef = edge.lineRef.start;
+                edgeEndRef = edge.lineRef.end;
+            } else {
+                edgeStartRef = createVertexRef(edge.start);
+                edgeEndRef = createVertexRef(edge.end);
+            }
+
+            customVertices.push({
+                position: newPos.clone(),
+                edgeStart: edgeStartRef,
+                edgeEnd: edgeEndRef,
+                t: t_value
+            });
+            createHandles();
+        };
+
         // Right click handler for adding vertices
         const onRightClick = (evt) => {
             if (!editMode) return;
-            
             evt.preventDefault();
-            
             const edge = findClosestEdge(scene.pointerX, scene.pointerY);
-            if (edge) {
-                // Get the 3D ray from the pointer position
-                const ray = scene.createPickingRay(scene.pointerX, scene.pointerY, BABYLON.Matrix.Identity(), camera);
-                
-                // Create a plane that contains the edge and is perpendicular to the camera view
-                const edgeDirection = edge.end.subtract(edge.start).normalize();
-                const cameraToEdge = edge.start.subtract(camera.position).normalize();
-                const planeNormal = BABYLON.Vector3.Cross(edgeDirection, cameraToEdge).normalize();
-                
-                // Create plane passing through the edge start point
-                const plane = BABYLON.Plane.FromPositionAndNormal(edge.start, planeNormal);
-                
-                // Find where the ray intersects this plane
-                const distance = ray.intersectsPlane(plane);
-                
-                let newPos;
-                let t_value;
-                
-                if (distance !== null) {
-                    // Get the 3D point where ray hits the plane
-                    const hitPoint = ray.direction.scale(distance).add(ray.origin);
-                    
-                    // Project this point onto the edge line to find the closest point on the edge
-                    const edgeVector = edge.end.subtract(edge.start);
-                    const edgeLength = edgeVector.length();
-                    const edgeNormalized = edgeVector.normalize();
-                    
-                    const pointVector = hitPoint.subtract(edge.start);
-                    const projectionLength = BABYLON.Vector3.Dot(pointVector, edgeNormalized);
-                    
-                    // Clamp to the edge bounds
-                    const clampedLength = Math.max(0, Math.min(edgeLength, projectionLength));
-                    t_value = clampedLength / edgeLength;
-                    
-                    // Calculate the actual position on the edge
-                    newPos = edge.start.add(edgeNormalized.scale(clampedLength));
-                } else {
-                    // Fallback to screen-space calculation if plane intersection fails
-                    newPos = edge.start.scale(1 - edge.t).add(edge.end.scale(edge.t));
-                    t_value = edge.t;
-                }
-                
-                let edgeStartRef, edgeEndRef;
-                
-                if (edge.type === 'custom' && edge.lineRef) {
-                    // Adding handle on a custom line - use the line's vertex references
-                    edgeStartRef = edge.lineRef.start;
-                    edgeEndRef = edge.lineRef.end;
-                } else {
-                    // Adding handle on a shape edge - create vertex references
-                    edgeStartRef = createVertexRef(edge.start);
-                    edgeEndRef = createVertexRef(edge.end);
-                }
-                
-                // Add new vertex as custom vertex with edge information
-                customVertices.push({
-                    position: newPos.clone(),
-                    edgeStart: edgeStartRef,
-                    edgeEnd: edgeEndRef,
-                    t: t_value
-                });
-                
-                // Recreate handles to include the new custom vertex
-                createHandles();
-            }
+            if (edge) addVertexOnEdge(edge, scene.pointerX, scene.pointerY);
         };
 
         // Add context menu listener
@@ -1303,11 +1451,11 @@
             }
 
             const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => {
-                return handles.includes(mesh);
+                return handles.includes(mesh) || hitAreaMeshes.includes(mesh);
             });
 
             if (pickInfo.hit) {
-                draggedHandle = pickInfo.pickedMesh;
+                draggedHandle = getLogicalHandle(pickInfo.pickedMesh);
                 
                 if (editMode) {
                     // Edit mode: Start drawing a line or prepare to delete
@@ -1341,6 +1489,8 @@
                         currentMeshPos = draggedHandle.position.clone();
                     }
                 }
+            } else if (editMode && isTouchDevice && !pickInfo.hit) {
+                editModeEmptyTapStart = { x: scene.pointerX, y: scene.pointerY, t: Date.now() };
             }
         };
 
@@ -1350,8 +1500,9 @@
                 const dx = scene.pointerX - editModeStartPos.x;
                 const dy = scene.pointerY - editModeStartPos.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
+                const clickVsDragThreshold = isTouchDevice ? 15 : 5;
                 
-                if (distance < 5) {
+                if (distance < clickVsDragThreshold) {
                     // Just clicked without dragging - delete the handle
                     const handleToDelete = editModeStartHandle;
                     
@@ -1395,18 +1546,19 @@
                 } else {
                     // Dragged - check if we ended on a different handle (draw line)
                     const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => {
-                        return handles.includes(mesh);
+                        return handles.includes(mesh) || hitAreaMeshes.includes(mesh);
                     });
 
-                    if (pickInfo.hit && pickInfo.pickedMesh !== editModeStartHandle) {
+                    const endHandle = pickInfo.hit ? getLogicalHandle(pickInfo.pickedMesh) : null;
+                    if (pickInfo.hit && endHandle && endHandle !== editModeStartHandle) {
                         // Save the line connection
                         const startRef = {
                             type: editModeStartHandle.userData.vertexType,
                             index: editModeStartHandle.userData.vertexIndex
                         };
                         const endRef = {
-                            type: pickInfo.pickedMesh.userData.vertexType,
-                            index: pickInfo.pickedMesh.userData.vertexIndex
+                            type: endHandle.userData.vertexType,
+                            index: endHandle.userData.vertexIndex
                         };
                         
                         // Check if this line already exists
@@ -1433,12 +1585,23 @@
                 editModeStartHandle = null;
                 editModeStartPos = null;
                 camera.attachControl(canvas, true);
+            } else if (editMode && isTouchDevice && editModeEmptyTapStart) {
+                const dx = scene.pointerX - editModeEmptyTapStart.x;
+                const dy = scene.pointerY - editModeEmptyTapStart.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const duration = Date.now() - editModeEmptyTapStart.t;
+                if (dist < 25 && duration < 400) {
+                    const edge = findClosestEdge(scene.pointerX, scene.pointerY);
+                    if (edge) addVertexOnEdge(edge, scene.pointerX, scene.pointerY);
+                }
+                editModeEmptyTapStart = null;
             } else if (startingPoint) {
                 camera.attachControl(canvas, true);
                 startingPoint = null;
                 draggedHandle = null;
                 initialVerticesState = null;
             }
+            editModeEmptyTapStart = null;
         };
 
         const onPointerMove = () => {
@@ -1657,6 +1820,25 @@
         }
     });
 
+    // Hamburger menu toggle
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const shapeMenu = document.getElementById('shapeMenu');
+    
+    hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        shapeMenu.classList.toggle('show');
+        hamburgerBtn.classList.toggle('open');
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (shapeMenu.classList.contains('show') && 
+            !shapeMenu.contains(e.target) && 
+            !hamburgerBtn.contains(e.target)) {
+            shapeMenu.classList.remove('show');
+            hamburgerBtn.classList.remove('open');
+        }
+    });
+    
     // Menu button event listeners
     document.getElementById('pyramidBtn').addEventListener('click', () => switchShape('pyramid'));
     document.getElementById('triPyramidBtn').addEventListener('click', () => switchShape('triPyramid'));
